@@ -12,7 +12,7 @@ class RealTimeImageClassifier:
     def __init__(self):
         try:
             ######## 加载TFLite模型#############
-            model_path = r"C:\Users\AI_LAB_Student\image_classifier\model\exported_model__animals_40_2_10 _True__20250808_001555__model.tflite"
+            model_path = r"C:\Users\AI_LAB_Student\image_classifier\model\model.tflite"
             ######## 加载TFLite模型#############    
             self.interpreter = Interpreter(model_path=model_path)
             self.interpreter.allocate_tensors()
