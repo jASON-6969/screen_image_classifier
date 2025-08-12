@@ -30,14 +30,20 @@ pip install -r requirements.txt
 ```bash
 # 检查当前模型是否兼容
 python check_model.py
+
+# 如果遇到模型路径问题，使用修复工具
+python fix_model_path.py
 ```
 
 ### 2. 启动应用程序
 ```bash
-# 方法1：使用启动脚本（推荐）
+# 方法1：使用快速启动脚本（推荐，包含自动检查）
+quick_start.bat
+
+# 方法2：使用启动脚本
 start.bat
 
-# 方法2：直接运行
+# 方法3：直接运行
 python main.py
 ```
 
@@ -79,7 +85,7 @@ python main.py
 
 ## 模型信息
 
-- **模型文件**: `exported_model__animals_40_2_10 _True__20250808_001555__model.tflite`
+- **模型文件**: `model.tflite`
 - **类别数量**: 5种动物
 - **输入尺寸**: 根据模型自动检测
 - **输出**: 分类概率分布
@@ -91,19 +97,15 @@ python main.py
 #### 方法1：修改代码中的模型路径
 在 `main.py` 文件中找到以下代码行：
 ```python
-model_path = r"C:\Users\AI_LAB_Student\image_classifier\model\model.tflite"
+model_path = "model/model.tflite"
 ```
 
 将其更改为您的新模型路径：
 ```python
-model_path = r"您的模型文件完整路径\您的模型文件名.tflite"
-```
-
-#### 方法2：使用相对路径
-将模型文件放在项目目录下，使用相对路径：
-```python
+# 使用相对路径（推荐）
 model_path = "model/your_model.tflite"
-```
+
+
 
 ### 2. 更改模型类型和类别
 
@@ -275,6 +277,7 @@ python convert_model.py quantize model.h5 model_quantized.tflite
    - 检查模型文件路径是否正确
    - 确保模型文件存在且可访问
    - 验证模型文件是否为有效的TFLite格式
+   - 使用 `quick_start.bat` 进行自动检查和启动
 
 2. **依赖安装问题**
    - 使用管理员权限运行pip
