@@ -79,7 +79,7 @@ python main.py
 
 ## 模型信息
 
-- **模型文件**: `exported_model__animals_40_2_10 _True__20250808_001555__model.tflite`
+- **模型文件**: `model.tflite`
 - **类别数量**: 5种动物
 - **输入尺寸**: 根据模型自动检测
 - **输出**: 分类概率分布
@@ -91,7 +91,7 @@ python main.py
 #### 方法1：修改代码中的模型路径
 在 `main.py` 文件中找到以下代码行：
 ```python
-model_path = r"C:\Users\AI_LAB_Student\image_classifier\model\model.tflite"
+model_path = r"\image_classifier\model\model.tflite"
 ```
 
 将其更改为您的新模型路径：
