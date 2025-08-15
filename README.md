@@ -1,12 +1,15 @@
 # 实时图像分类器
 
-这是一个使用TFLite模型进行实时屏幕捕获和图像分类的Windows应用程序。
+这是一个使用TFLite模型进行实时屏幕捕获和图像分类的Windows应用程序，支持多模型切换和自动模型发现。
 
 ## 功能特性
 
 - 🖥️ 实时屏幕捕获（全屏或自定义区域）
 - 🤖 使用预训练的TFLite模型进行图像分类
 - 📊 实时显示分类结果和置信度
+- 🔄 **多模型切换**：支持在运行时切换不同的分类模型
+- 🔍 **自动模型发现**：自动扫描模型目录并加载可用模型
+- 🏷️ **智能标签管理**：根据模型自动配置分类标签
 
 ## 安装要求
 
@@ -17,10 +20,7 @@
 
 ### Python依赖
 ```bash
-# 方法1：使用安装脚本（推荐）
-install.bat
-
-# 方法2：手动安装
+# 安装所需依赖
 pip install -r requirements.txt
 ```
 
@@ -28,309 +28,238 @@ pip install -r requirements.txt
 
 ### 1. 检查您的模型
 ```bash
-# 检查当前模型是否兼容
+# 检查单个模型
 python check_model.py
 
-# 如果遇到模型路径问题，使用修复工具
-python fix_model_path.py
+# 检查所有模型（推荐）
+python check_model.py --all
+
+# 检查指定模型
+python check_model.py model/model.tflite
 ```
 
 ### 2. 启动应用程序
 ```bash
-# 方法1：使用快速启动脚本（推荐，包含自动检查）
-quick_start.bat
-
-# 方法2：使用启动脚本
+# 使用启动脚本（推荐）
 start.bat
 
-# 方法3：直接运行
+# 直接运行
 python main.py
 ```
 
 ### 3. 使用界面
+- 选择要使用的模型
 - 点击"开始捕获"按钮开始实时分类
 - 选择捕获区域（全屏或自定义区域）
 - 查看实时分类结果
 - 点击"停止捕获"按钮停止
 
-### 4. 功能说明
-- **全屏模式**: 捕获整个屏幕进行实时分类
-- **自定义区域**: 可调整X、Y坐标、宽度和高度，实时预览捕获区域
-- **分类结果**: 显示top-3预测结果和置信度
-- **实时预览**: 显示当前捕获的图像
+## 模型管理
+
+### 支持的模型类型
+
+#### 1. 花朵分类模型 (`model.tflite`)
+- **类别**: 5种花朵
+- **标签**: daisy, dandelion, roses, sunflowers, tulips
+- **用途**: 识别不同类型的花朵
+
+#### 2. 动物分类模型 (`model1.tflite`)
+- **类别**: 5种动物
+- **标签**: cats, chicken, cow, dogs, elephant
+- **用途**: 识别不同类型的动物
+
+#### 3. 自定义模型
+- 支持任意类别数量的分类模型
+- 自动生成通用标签（类别0, 类别1, 类别2...）
+- 自动检测输入输出格式
+
+### 模型切换功能
+
+#### 界面操作
+1. **选择模型**: 从下拉框选择要使用的模型
+2. **切换模型**: 点击"切换模型"按钮
+3. **刷新模型**: 点击"刷新模型"按钮重新扫描目录
+4. **模型信息**: 显示当前使用的模型名称
+
+#### 自动模型发现
+- 程序启动时自动扫描 `model/` 目录
+- 查找所有 `.tflite` 文件
+- 自动配置模型信息和标签
+- 支持热插拔（添加新模型后点击刷新）
+
+### 模型检查工具
+
+#### 功能特性
+- **自动检测**: 自动发现模型目录中的所有模型
+- **兼容性检查**: 验证模型与代码的兼容性
+- **标签建议**: 根据类别数量提供标签建议
+- **详细报告**: 生成完整的检查报告
+
+#### 使用方法
+```bash
+# 检查所有模型
+python check_model.py --all
+
+# 检查单个模型
+python check_model.py model/model.tflite
+
+# 检查默认模型
+python check_model.py
+```
+
+#### 检查内容
+- 模型文件完整性
+- 输入输出格式
+- 类别数量检测
+- 数据类型验证
+- 量化信息检查
+- 兼容性分析
 
 ## 使用方法
 
 ### 基本操作
 1. **启动应用程序**
    ```bash
-   # 方法1：使用启动脚本（推荐）
    start.bat
-   
-   # 方法2：直接运行
-   python main.py
    ```
 
-2. **使用界面**
-   - 点击"开始捕获"按钮开始实时分类
+2. **选择模型**
+   - 从下拉框选择要使用的模型
+   - 查看模型信息
+   - 点击"切换模型"应用选择
+
+3. **开始分类**
+   - 点击"开始捕获"按钮
    - 选择捕获区域（全屏或自定义区域）
    - 查看实时分类结果
    - 点击"停止捕获"按钮停止
 
-3. **功能说明**
-   - **全屏模式**: 捕获整个屏幕进行实时分类
-   - **自定义区域**: 可调整X、Y坐标、宽度和高度，实时预览捕获区域
-   - **分类结果**: 显示top-3预测结果和置信度
-   - **实时预览**: 显示当前捕获的图像
+### 高级功能
 
-## 模型信息
+#### 自定义捕获区域
+- **全屏模式**: 捕获整个屏幕
+- **自定义区域**: 精确设置X、Y坐标和宽高
+- **实时预览**: 显示当前捕获区域
+- **参数调整**: 支持0-1920的X坐标，0-1080的Y坐标
 
-- **模型文件**: `model.tflite`
-- **类别数量**: 5种动物
-- **输入尺寸**: 根据模型自动检测
-- **输出**: 分类概率分布
+#### 模型管理
+- **模型切换**: 运行时切换不同模型
+- **自动发现**: 新模型自动识别
+- **标签管理**: 自动配置分类标签
+- **兼容性检查**: 验证模型可用性
 
-## 更改模型
+## 项目结构
 
-### 1. 更改模型文件位置
-
-#### 方法1：修改代码中的模型路径
-在 `main.py` 文件中找到以下代码行：
-```python
-model_path = r"C:\Users\AI_LAB_Student\image_classifier\model\model.tflite"
+```
+image_classifier/
+├── main.py                 # 主应用程序
+├── check_model.py          # 模型检查工具
+├── start.bat              # 启动脚本
+├── requirements.txt        # Python依赖
+├── README.md              # 说明文档
+└── model/                 # 模型目录
+    ├── model.tflite       # 花朵分类模型
+    └── model1.tflite      # 动物分类模型
 ```
 
-将其更改为您的新模型路径：
-```python
-# 使用相对路径（推荐）
-model_path = "model/your_model.tflite"
+## 配置说明
 
-
-
-### 2. 更改模型类型和类别
-
-#### 更新类别标签
-在 `main.py` 的 `__init__` 方法中找到：
-```python
-self.labels = [
-    'cats', 'chicken', 'cow', 'dogs', 'elephant'
-]
-```
-
-根据您的新模型更新类别标签：
-```python
-# 例如：用于识别不同物体的模型
-self.labels = [
-    'person', 'car', 'bicycle', 'dog', 'cat', 'bird'
-]
-
-# 或者用于识别不同食物的模型
-self.labels = [
-    'apple', 'banana', 'orange', 'grape', 'strawberry'
-]
-```
-
-#### 支持的模型类型
-
-**图像分类模型**（推荐）：
-- 输入：单张图像
-- 输出：类别概率分布
-- 格式：TFLite (.tflite)
-- 输入尺寸：通常为 224x224, 299x299, 或 512x512
-
-
-### 3. 模型兼容性检查
-
-#### 检查模型输入输出
-
-**使用模型检查工具**
-```bash
-# 检查默认模型
-python check_model.py
-
-# 检查指定模型
-python check_model.py path/to/your/model.tflite
-```
-
-
-#### 常见模型格式
-- **MobileNet**: 输入尺寸 224x224x3
-- **EfficientNet**: 输入尺寸 224x224x3 或 299x299x3
-- **ResNet**: 输入尺寸 224x224x3
-- **Inception**: 输入尺寸 299x299x3
-
-### 4. 模型预处理要求
-
-#### 图像预处理
-当前代码使用以下预处理：
-```python
-# 调整图像大小
-resized = cv2.resize(image, target_size)
-
-# 标准化到 [0,1]
-normalized = resized.astype(np.float32) / 255.0
-```
-
-如果您的模型需要不同的预处理，请修改 `preprocess_image` 方法：
+### 模型配置
+程序会自动检测模型目录中的模型文件，您也可以手动配置：
 
 ```python
-def preprocess_image(self, image):
-    # 调整图像大小
-    target_size = (self.input_shape[1], self.input_shape[2])
-    resized = cv2.resize(image, target_size)
-    
-    # 根据模型要求进行预处理
-    if self.model_type == "mobilenet":
-        # MobileNet预处理
-        normalized = resized.astype(np.float32) / 255.0
-    elif self.model_type == "efficientnet":
-        # EfficientNet预处理
-        normalized = resized.astype(np.float32) / 255.0
-    elif self.model_type == "custom":
-        # 自定义预处理
-        normalized = (resized.astype(np.float32) - 127.5) / 127.5
-    
-    # 添加batch维度
-    batched = np.expand_dims(normalized, axis=0)
-    return batched
+# 在 main.py 中配置模型
+self.models = {
+    'flowers': {
+        'path': 'model/model.tflite',
+        'labels': ['daisy', 'dandelion', 'roses', 'sunflowers', 'tulips'],
+        'name': '花朵分类模型'
+    },
+    'animals': {
+        'path': 'model/model1.tflite', 
+        'labels': ['cats', 'chicken', 'cow', 'dogs', 'elephant'],
+        'name': '动物分类模型'
+    }
+}
 ```
 
-### 5. 模型性能优化
+### 标签配置
+每个模型都有对应的标签配置：
 
-#### 启用GPU加速（如果可用）
 ```python
-# 在模型加载时启用GPU
-interpreter = tf.lite.Interpreter(
-    model_path=model_path,
-    experimental_delegates=[tf.lite.load_delegate('libedgetpu.so.1')]
-)
+# 花朵模型标签
+['daisy', 'dandelion', 'roses', 'sunflowers', 'tulips']
+
+# 动物模型标签
+['cats', 'chicken', 'cow', 'dogs', 'elephant']
+
+# 通用标签（自动生成）
+['类别0', '类别1', '类别2', '类别3', '类别4']
 ```
-
-#### 量化模型
-使用量化模型可以提高推理速度：
-```python
-# 加载量化模型
-interpreter = tf.lite.Interpreter(model_path="quantized_model.tflite")
-```
-
-### 6. 模型转换
-
-#### 转换其他格式的模型
-如果您有其他格式的模型（如Keras .h5文件），可以使用转换工具：
-
-```bash
-# 转换Keras模型
-python convert_model.py keras model.h5 model.tflite
-
-# 转换SavedModel
-python convert_model.py saved_model ./saved_model/ model.tflite
-
-# 带优化的转换
-python convert_model.py optimize model.h5 model_optimized.tflite
-
-# 带量化的转换
-python convert_model.py quantize model.h5 model_quantized.tflite
-```
-
-#### 支持的输入格式
-- **Keras模型** (.h5, .keras)
-- **SavedModel** (目录格式)
-- **TensorFlow Hub模型**
-
-### 7. 故障排除
-
-#### 模型加载错误
-- 检查文件路径是否正确
-- 确保模型文件未损坏
-- 验证模型格式是否为TFLite
-
-#### 推理错误
-- 检查输入尺寸是否匹配
-- 验证预处理步骤是否正确
-- 确认类别数量与模型输出匹配
-
-#### 性能问题
-- 使用更小的模型
-- 降低输入分辨率
-- 启用模型量化
-- 使用GPU加速
-
-#### 转换错误
-- 确保输入模型格式正确
-- 检查TensorFlow版本兼容性
-- 验证模型结构是否支持转换
-
-## 支持的动物类别
-
-当前模型支持以下5种动物类别：
-- cats (猫)
-- chicken (鸡)
-- cow (牛)
-- dogs (狗)
-- elephant (大象)
 
 ## 故障排除
 
 ### 常见问题
 
 1. **模型加载失败**
-   - 检查模型文件路径是否正确
-   - 确保模型文件存在且可访问
-   - 验证模型文件是否为有效的TFLite格式
-   - 使用 `quick_start.bat` 进行自动检查和启动
+   - 使用 `python check_model.py --all` 检查所有模型
+   - 确保模型文件在正确的目录中
+   - 验证模型文件格式
 
-2. **依赖安装问题**
-   - 使用管理员权限运行pip
-   - 尝试升级pip: `python -m pip install --upgrade pip`
+2. **模型切换失败**
+   - 检查模型文件是否存在
+   - 验证模型格式是否兼容
+   - 查看控制台错误信息
 
-3. **性能问题**
-   - 降低捕获帧率（修改代码中的`time.sleep(0.1)`）
-   - 使用自定义区域而非全屏捕获
-   - 使用更小的模型或量化模型
+3. **标签不匹配**
+   - 使用模型检查工具验证类别数量
+   - 确保标签列表与模型输出匹配
+   - 检查预定义标签映射
 
-4. **TFLite运行时错误**
-   - 确保安装了正确的tensorflow版本
-   - 检查Python版本兼容性
+4. **性能问题**
+   - 使用更小的模型
+   - 降低捕获帧率
+   - 使用自定义区域而非全屏
 
-5. **模型推理错误**
-   - 检查模型输入尺寸是否匹配
-   - 验证类别标签数量与模型输出匹配
-   - 确认图像预处理步骤正确
+### 调试工具
 
-6. **类别标签不匹配**
-   - 确保`self.labels`列表与模型输出类别数量一致
-   - 检查类别标签顺序是否正确
+#### 模型检查工具
+```bash
+# 全面检查
+python check_model.py --all
 
-7. **自定义区域设置问题**
-   - 确保X、Y坐标在屏幕范围内
-   - 检查宽度和高度设置是否合理
-   - 验证自定义区域不会超出屏幕边界
-
-## 自定义配置
-
-### 修改捕获区域
-现在您可以通过界面直接调整捕获区域：
-- **X坐标**: 距离屏幕左侧的像素数 (0-1920)
-- **Y坐标**: 距离屏幕顶部的像素数 (0-1080)  
-- **宽度**: 捕获区域的宽度 (100-800像素)
-- **高度**: 捕获区域的高度 (100-600像素)
-
-或者通过代码修改默认值：
-```python
-self.x_var = tk.IntVar(value=400)      # X坐标
-self.y_var = tk.IntVar(value=200)      # Y坐标
-self.width_var = tk.IntVar(value=400)  # 宽度
-self.height_var = tk.IntVar(value=300) # 高度
+# 详细输出
+python check_model.py model/model.tflite
 ```
 
-### 调整帧率
-修改`time.sleep(0.1)`中的数值：
-- `0.1` = 10 FPS
-- `0.05` = 20 FPS
-- `0.2` = 5 FPS
+#### 控制台输出
+- 程序启动时会显示发现的模型
+- 模型切换时会显示详细信息
+- 错误信息会显示在控制台
 
-### 修改类别标签
-在`__init__`方法中更新`self.labels`列表。
+## 扩展功能
+
+### 添加新模型
+1. 将 `.tflite` 文件放入 `model/` 目录
+2. 点击"刷新模型"按钮
+3. 从下拉框选择新模型
+4. 点击"切换模型"应用
+
+### 自定义标签
+对于没有预定义标签的模型，程序会自动生成通用标签。您也可以手动配置：
+
+```python
+# 在 generate_labels_for_model 方法中添加
+label_mappings = {
+    'your_model': ['标签1', '标签2', '标签3', '标签4', '标签5'],
+    # ... 其他模型
+}
+```
+
+### 模型优化
+- 使用量化模型提高性能
+- 选择合适输入尺寸的模型
+- 考虑使用GPU加速（如果可用）
 
 ## 许可证
 
@@ -338,9 +267,9 @@ self.height_var = tk.IntVar(value=300) # 高度
 
 ## 技术支持
 
-如遇到问题，请检查：
-1. Python版本兼容性
-2. 依赖包版本
-3. 模型文件完整性
-4. 系统权限设置
-#
+如遇到问题，请按以下顺序检查：
+1. 使用 `python check_model.py --all` 检查模型
+2. 查看控制台错误信息
+3. 验证模型文件完整性
+4. 检查Python环境和依赖包
+5. 确认系统权限设置

@@ -141,13 +141,90 @@ def suggest_labels(num_classes):
     
     print()
 
+def auto_check_all_models():
+    """自动检查指定目录下的所有模型"""
+    import glob
+    
+    model_dir = r"C:\Users\AI_LAB_Student\image_classifier - Copy\model"
+    
+    print("🔍 自动检查所有模型")
+    print("=" * 50)
+    print(f"搜索目录: {model_dir}")
+    print()
+    
+    # 检查目录是否存在
+    if not os.path.exists(model_dir):
+        print(f"❌ 目录不存在: {model_dir}")
+        return False
+    
+    # 搜索所有.tflite文件
+    tflite_files = glob.glob(os.path.join(model_dir, "*.tflite"))
+    
+    if not tflite_files:
+        print("❌ 在指定目录中未找到.tflite文件")
+        return False
+    
+    print(f"✅ 找到 {len(tflite_files)} 个模型文件:")
+    for i, model_file in enumerate(tflite_files, 1):
+        print(f"   {i}. {os.path.basename(model_file)}")
+    print()
+    
+    # 检查每个模型
+    results = {}
+    for i, model_file in enumerate(tflite_files):
+        print(f"📋 检查模型 {i+1}/{len(tflite_files)}: {os.path.basename(model_file)}")
+        print("-" * 40)
+        
+        success = check_model(model_file)
+        results[model_file] = success
+        
+        if i < len(tflite_files) - 1:  # 不是最后一个模型
+            print("\n" + "=" * 60 + "\n")
+    
+    # 生成检查报告
+    print("📊 检查报告")
+    print("=" * 50)
+    
+    successful_models = [path for path, success in results.items() if success]
+    failed_models = [path for path, success in results.items() if not success]
+    
+    print(f"✅ 成功检查: {len(successful_models)} 个模型")
+    for model_path in successful_models:
+        print(f"   - {os.path.basename(model_path)}")
+    
+    if failed_models:
+        print(f"❌ 检查失败: {len(failed_models)} 个模型")
+        for model_path in failed_models:
+            print(f"   - {os.path.basename(model_path)}")
+    
+    print()
+    print("💡 建议:")
+    if successful_models:
+        print("1. 成功的模型可以直接使用")
+        print("2. 建议使用类别数量匹配的模型")
+    if failed_models:
+        print("3. 失败的模型需要检查文件完整性")
+    
+    return len(successful_models) > 0
+
 def main():
     """主函数"""
     print("🔍 TFLite模型检查工具")
     print("=" * 50)
     
+    # 检查命令行参数
     if len(sys.argv) > 1:
-        model_path = sys.argv[1]
+        if sys.argv[1] == "--all" or sys.argv[1] == "-a":
+            # 自动检查所有模型
+            success = auto_check_all_models()
+            if success:
+                print("✅ 所有模型检查完成!")
+            else:
+                print("❌ 模型检查过程中发现问题")
+            return
+        else:
+            # 检查指定模型
+            model_path = sys.argv[1]
     else:
         # 默认模型路径
         model_path = r"C:\Users\AI_LAB_Student\image_classifier\model\exported_model__animals_40_2_10 _True__20250808_001555__model.tflite"
@@ -166,11 +243,14 @@ def main():
                     break
             else:
                 print("❌ 未找到模型文件")
-                print("请提供模型文件路径:")
-                print("python check_model.py <模型文件路径>")
+                print()
+                print("💡 使用说明:")
+                print("1. 检查单个模型: python check_model.py <模型文件路径>")
+                print("2. 检查所有模型: python check_model.py --all")
+                print("3. 检查所有模型: python check_model.py -a")
                 return
     
-    # 检查模型
+    # 检查单个模型
     success = check_model(model_path)
     
     if success:

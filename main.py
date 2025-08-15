@@ -32,10 +32,12 @@ class RealTimeImageClassifier:
         self.output_details = self.interpreter.get_output_details()
         self.input_shape = self.input_details[0]['shape']
         
-        # 动物类别标签（根据您的模型调整）
-        self.labels = [
-            'cats', 'chicken', 'cow', 'dogs', 'elephant'
-        ]
+        # 自动搜索模型文件
+        self.models = self.auto_discover_models()
+        
+        # 当前模型
+        self.current_model = list(self.models.keys())[0] if self.models else 'default'
+        self.labels = self.models[self.current_model]['labels'] if self.models else ['未知']
         
         # 创建GUI窗口
         self.root = tk.Tk()
@@ -62,6 +64,74 @@ class RealTimeImageClassifier:
         
         # 屏幕捕获器 - 使用PIL的ImageGrab替代mss
         self.sct = None
+        
+    def auto_discover_models(self):
+        """自动发现模型目录中的模型文件"""
+        import os
+        import glob
+        
+        models = {}
+        model_dir = r"C:\Users\AI_LAB_Student\image_classifier - Copy\model"
+        
+        try:
+            # 检查模型目录是否存在
+            if not os.path.exists(model_dir):
+                print(f"模型目录不存在: {model_dir}")
+                # 尝试使用相对路径
+                model_dir = "model"
+                if not os.path.exists(model_dir):
+                    print(f"相对路径也不存在: {model_dir}")
+                    return {}
+            
+            # 搜索所有.tflite文件
+            tflite_files = glob.glob(os.path.join(model_dir, "*.tflite"))
+            
+            if not tflite_files:
+                print(f"在目录 {model_dir} 中未找到.tflite文件")
+                return {}
+            
+            print(f"找到 {len(tflite_files)} 个模型文件:")
+            
+            for model_file in tflite_files:
+                # 获取文件名（不含扩展名）作为模型键
+                model_name = os.path.splitext(os.path.basename(model_file))[0]
+                
+                # 根据文件名生成标签（这里可以根据需要自定义）
+                labels = self.generate_labels_for_model(model_name)
+                
+                # 使用相对路径存储
+                relative_path = os.path.relpath(model_file, os.getcwd())
+                
+                models[model_name] = {
+                    'path': relative_path,
+                    'labels': labels,
+                    'name': f'{model_name}模型',
+                    'full_path': model_file
+                }
+                
+                print(f"  - {model_name}: {relative_path} (标签: {len(labels)}个)")
+            
+            return models
+            
+        except Exception as e:
+            print(f"自动发现模型时出错: {e}")
+            return {}
+    
+    def generate_labels_for_model(self, model_name):
+        """根据模型名称生成标签"""
+        # 预定义的标签映射
+        label_mappings = {
+            'model': ['daisy', 'dandelion', 'roses', 'sunflowers', 'tulips'],  # 花朵
+            'model1': ['cats', 'chicken', 'cow', 'dogs', 'elephant'],  # 动物
+        }
+        
+        # 如果找到预定义的标签，使用它
+        if model_name in label_mappings:
+            return label_mappings[model_name]
+        
+        # 否则生成通用标签
+        print(f"模型 {model_name} 没有预定义标签，使用通用标签")
+        return [f'类别{i}' for i in range(5)]  # 默认5个类别
         
     def setup_gui(self):
         # 主框架
@@ -117,6 +187,25 @@ class RealTimeImageClassifier:
         reset_btn = ttk.Button(self.custom_frame, text="重置", command=self.reset_custom_area)
         reset_btn.grid(row=0, column=8, padx=(5, 0))
         
+        # 模型切换按钮
+        model_frame = ttk.Frame(main_frame)
+        model_frame.grid(row=1, column=0, columnspan=2, pady=(0, 10), sticky=(tk.W, tk.E))
+        
+        ttk.Label(model_frame, text="选择模型:").grid(row=0, column=0, padx=(0, 5))
+        self.model_var = tk.StringVar(value=self.current_model)
+        model_combo = ttk.Combobox(model_frame, textvariable=self.model_var, 
+                                 values=list(self.models.keys()), state="readonly", width=15)
+        model_combo.grid(row=0, column=1, padx=(0, 10))
+        
+        self.switch_model_btn = ttk.Button(model_frame, text="切换模型", command=self.switch_model)
+        self.switch_model_btn.grid(row=0, column=2, padx=(0, 10))
+        
+        self.refresh_btn = ttk.Button(model_frame, text="刷新模型", command=self.refresh_models)
+        self.refresh_btn.grid(row=0, column=3, padx=(0, 10))
+        
+        self.model_info_label = ttk.Label(model_frame, text=f"当前模型: {self.models[self.current_model]['name']}")
+        self.model_info_label.grid(row=0, column=4, padx=(10, 0))
+        
 
         
         # 绑定区域选择变化事件
@@ -133,14 +222,14 @@ class RealTimeImageClassifier:
         
         # 图像显示区域
         self.image_label = ttk.Label(main_frame, text="等待开始捕获...")
-        self.image_label.grid(row=2, column=0, columnspan=2, pady=10, sticky=(tk.W, tk.E))
+        self.image_label.grid(row=3, column=0, columnspan=2, pady=10, sticky=(tk.W, tk.E, tk.N, tk.S))
         
         # 分类结果显示
         result_frame = ttk.LabelFrame(main_frame, text="分类结果", padding="10")
-        result_frame.grid(row=3, column=0, columnspan=2, pady=(10, 0), sticky=(tk.W, tk.E))
+        result_frame.grid(row=4, column=0, columnspan=2, pady=(10, 0), sticky=(tk.W, tk.E, tk.N, tk.S))
         
         self.result_text = tk.Text(result_frame, height=8, width=60)
-        self.result_text.grid(row=0, column=0, sticky=(tk.W, tk.E))
+        self.result_text.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         
         # 滚动条
         scrollbar = ttk.Scrollbar(result_frame, orient="vertical", command=self.result_text.yview)
@@ -150,14 +239,16 @@ class RealTimeImageClassifier:
         # 状态栏
         self.status_var = tk.StringVar(value="就绪")
         status_bar = ttk.Label(main_frame, textvariable=self.status_var, relief="sunken")
-        status_bar.grid(row=4, column=0, columnspan=2, pady=(10, 0), sticky=(tk.W, tk.E))
+        status_bar.grid(row=5, column=0, columnspan=2, pady=(10, 0), sticky=(tk.W, tk.E))
         
         # 配置网格权重
         self.root.columnconfigure(0, weight=1)
         self.root.rowconfigure(0, weight=1)
         main_frame.columnconfigure(1, weight=1)
-        main_frame.rowconfigure(1, weight=1)
+        main_frame.rowconfigure(3, weight=1)  # 图像显示区域可扩展
+        main_frame.rowconfigure(4, weight=1)  # 分类结果区域可扩展
         result_frame.columnconfigure(0, weight=1)
+        result_frame.rowconfigure(0, weight=1)
         
     def on_area_change(self, event=None):
         """当捕获区域选择改变时调用"""
@@ -193,6 +284,80 @@ class RealTimeImageClassifier:
         self.width_var.set(400)
         self.height_var.set(300)
         self.status_var.set("已重置为默认区域设置")
+        
+    def switch_model(self):
+        """切换模型"""
+        try:
+            # 停止当前捕获
+            if self.is_running:
+                self.stop_capture()
+            
+            # 获取选择的模型
+            new_model = self.model_var.get()
+            if new_model == self.current_model:
+                return
+                
+            # 更新当前模型
+            self.current_model = new_model
+            model_config = self.models[new_model]
+            
+            # 重新加载模型
+            self.interpreter = Interpreter(model_path=model_config['path'])
+            self.interpreter.allocate_tensors()
+            
+            # 更新输入输出信息
+            self.input_details = self.interpreter.get_input_details()
+            self.output_details = self.interpreter.get_output_details()
+            self.input_shape = self.input_details[0]['shape']
+            
+            # 更新标签
+            self.labels = model_config['labels']
+            
+            # 更新显示信息
+            self.model_info_label.config(text=f"当前模型: {model_config['name']}")
+            self.status_var.set(f"已切换到{model_config['name']}")
+            
+            # 清除之前的结果
+            self.clear_image_display()
+            
+            print(f"成功切换到模型: {model_config['name']}")
+            
+        except Exception as e:
+            error_msg = f"模型切换失败: {e}"
+            print(error_msg)
+            self.status_var.set(error_msg)
+            # 回退到之前的模型
+            self.model_var.set(self.current_model)
+    
+    def refresh_models(self):
+        """刷新模型列表"""
+        try:
+            # 重新发现模型
+            new_models = self.auto_discover_models()
+            if new_models:
+                self.models = new_models
+                
+                # 更新下拉框选项
+                model_keys = list(self.models.keys())
+                self.model_var.set(model_keys[0] if model_keys else '')
+                
+                # 更新当前模型信息
+                if self.current_model not in self.models:
+                    self.current_model = model_keys[0] if model_keys else 'default'
+                    self.labels = self.models[self.current_model]['labels'] if self.current_model in self.models else ['未知']
+                
+                # 更新显示
+                self.model_info_label.config(text=f"当前模型: {self.models[self.current_model]['name']}")
+                self.status_var.set("模型列表已刷新")
+                
+                print("模型列表刷新成功")
+            else:
+                self.status_var.set("未找到任何模型文件")
+                
+        except Exception as e:
+            error_msg = f"刷新模型列表失败: {e}"
+            print(error_msg)
+            self.status_var.set(error_msg)
         
     def on_closing(self):
         """窗口关闭时的处理"""
